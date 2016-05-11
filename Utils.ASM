@@ -128,7 +128,6 @@ InputHandler:
 InputHandler.repeat1:
 
 		  mov eax,[input_storage+edx]
-		  and eax,$00ffff
 
 		  cmp eax,CMDBYE
 		  je SYSEND
@@ -187,9 +186,6 @@ InputHandler.repeat1:
 		  cmp eax,CMDRPTI
 		  je InputHandler.exec_bucle
 
-		  ; me fijo si es un nro, un add ,un sub, un rpt
-		  and eax,$00000ff
-
 		  cmp eax,CMDADD
 		  je InputHandler.exec_add
 
@@ -204,6 +200,9 @@ InputHandler.repeat1:
 
 		  cmp eax,CMDRPTF
 		  je InputHandler.bcl_closer
+
+		  ;Agregar numeros a la pila. Un digito por vez
+		  and eax,$000000FF
 
 		  cmp eax,CMDLNUMBER
 		  jl InputHandler.errorComando

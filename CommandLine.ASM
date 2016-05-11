@@ -1,4 +1,5 @@
 DupCommand:
+;DUP
 ; duplica el tope de la pila de dibujo.
 
 		mov ecx,[cnumberstack]
@@ -26,9 +27,8 @@ DupCommand:
 
 ;**************************************************************************************
 AddCommand:
-; ejecuta el comando + (ADD)
+;ADD
 ; suma los dos primeros numeros de la pila
-; desapilandolos y apila el resultado
 
 		mov ecx,[cnumberstack]
 		cmp ecx,2
@@ -61,7 +61,7 @@ AddCommand.emptyStack:
 
 ;**************************************************************************************
 DropCommand:
-; ejecuta el comando DROP
+;DROP
 ; quita el tope de la pila
 
 		mov ecx,[cnumberstack]
@@ -88,7 +88,7 @@ DropCommand.emptyStack:
 
 ;****************************************************************************************
 SwapCommand:
-; ejectua el comando SWAP
+;SWAP
 ; intercambia el tope y el segundo de la pila
 
 		mov ecx,[cnumberstack]
@@ -118,7 +118,7 @@ SwapCommand.emptyStack:
 ;**************************************************************************************
 
 MultCommand:
-; ejectua el comando * (MUL)
+;MUL
 ; multiplica los ultimos dos numeros de la pila
 ; desapilandolos y apilando el resultados
 
@@ -153,7 +153,8 @@ MultCommand.emptyStack:
 ;**************************************************************************************
 
 PositionCommand:
-; Ubica l�piz en X,Y tomando los primeros dos valores de la pila.
+;POS
+; Ubica lapiz en X,Y tomando los primeros dos valores de la pila.
 
 		mov ecx,[cnumberstack]
 		cmp ecx,2
@@ -212,6 +213,7 @@ PositionCommand:
 ;**************************************************************************************
 
 BackgroundCommand:
+;BKG
 ; Cambia el color del fondo de la pantalla.
 
 
@@ -246,20 +248,28 @@ BackgroundCommand.pilaVacia:
 ;**************************************************************************************
 
 DivCommand:
+;DIV
 ; divide dos numeros.
 
 		mov ecx,[cnumberstack]
 		cmp ecx,2
 		jl DivCommand.emptyStack
 
+		;Leer los 2 numeros
 		sub ecx,1
 		mov eax,[number_stack+ecx*4]
 		sub ecx,1
 		mov ebx,[number_stack+ecx*4]
+
+		cmp ebx,0
+		je  DivCommand.errorDivision
+
 		idiv ebx
+
 		mov [number_stack+ecx*4],eax
 		add ecx,1
 		mov [number_stack+ecx*4],0
+
 		mov [cnumberstack],ecx
 
 		call  GraphicDrawStack
@@ -274,6 +284,15 @@ DivCommand.emptyStack:
 		call  GraphicPrintMessage
 		add esp,4
 		ret
+
+DivCommand.errorDivision:
+		add ecx,2
+
+		push msg_divisionerror
+		call GraphicPrintMessage
+		add esp,4
+		ret
+
 ;**************************************************************************************
 
 CenterCommand:
@@ -294,7 +313,8 @@ CenterCommand:
 ;**************************************************************************************
 
 UpCommand:
-; Levanta el l�piz
+;UP
+; Levanta el lapiz
 		mov [pen_state],0
 		push msg_cmdok
 		call  GraphicPrintMessage
@@ -304,7 +324,8 @@ UpCommand:
 ;**************************************************************************************
 
 RightCommand:
-; Rota l�piz a la izquierda la cantidad de grados que indica el valor de la pila.
+;RIGH
+; Rota lapiz a la izquierda la cantidad de grados que indica el valor de la pila.
 
 
        mov ecx,[cnumberstack]
@@ -349,7 +370,8 @@ RightCommand:
 ;**************************************************************************************
 
 DownCommand:
-; Baja el L�piz
+;DOWN
+; Baja el lapiz
 
 		mov [pen_state],1
 		push msg_cmdok
@@ -362,7 +384,8 @@ DownCommand:
 ;**************************************************************************************
 
 ColorCommand:
-; Levanta el l�piz y cambia el color en el que este dibuja.
+;COL
+; Levanta el lapiz y cambia el color en el que este dibuja.
 
 		mov ecx,[cnumberstack]
 		cmp ecx,0
@@ -394,6 +417,8 @@ ColorCommand:
 ;**************************************************************************************
 
 AdvanceCommand:
+;ADV
+; Mueve el lapiz en la direccion que apunta
 
 
 		mov ecx,[cnumberstack]
@@ -481,7 +506,8 @@ HistoryBufferCommand.exit:
 ;**************************************************************************************
 
 LeftCommand:
-; Rota l�piz a la izquierda la cantidad de grados que indica el valor de la pila.
+;LEFT
+; Rota lapiz a la izquierda la cantidad de grados que indica el valor de la pila.
 
        mov ecx,[cnumberstack]
        cmp ecx,0
@@ -527,7 +553,7 @@ LeftCommand:
  ;**************************************************************************************
 
 SubCommand:
-; ejecuta el comando - (SUB)
+;SUB
 ; resta los dos primeros numeros de la pila
 ; desapilandolos y apila el resultado
 

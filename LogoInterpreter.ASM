@@ -137,6 +137,7 @@ section '.data' data readable writeable
 	msg_hexnumbercmd db	'hexadecimal number inserted',0
 	msg_emptystack db	'empty stack',0
 	msg_leasttwo db 	'at least 2 numbers must be inserted in stack',0
+	msg_divisionerror db	'error division by zero',0
 	msg_repeatok db 	'repeat command executed',0
 	msg_numerocmd db	'number ',0
 	msg_dupcmd db		'du ',0
