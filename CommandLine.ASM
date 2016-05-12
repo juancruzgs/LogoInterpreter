@@ -35,9 +35,10 @@ AddCommand:
 		jl AddCommand.emptyStack
 
 		sub ecx,1
-		mov eax,[number_stack+ecx*4]
+		mov ebx,[number_stack+ecx*4] ;Tope de la pila
 		sub ecx,1
-		mov ebx,[number_stack+ecx*4]
+		mov eax,[number_stack+ecx*4] ;Segundo de la pila
+
 		add eax,ebx
 		mov [number_stack+ecx*4],eax
 
@@ -99,6 +100,7 @@ SwapCommand:
 		mov eax,[number_stack+ecx*4]
 		sub ecx,1
 		mov ebx,[number_stack+ecx*4]
+
 		mov [number_stack+ecx*4],eax
 		add ecx,1
 		mov [number_stack+ecx*4],ebx
@@ -127,9 +129,10 @@ MultCommand:
 		jl MultCommand.emptyStack
 
 		sub ecx,1
-		mov eax,[number_stack+ecx*4]
+		mov ebx,[number_stack+ecx*4] ;Tope de la pila
 		sub ecx,1
-		mov ebx,[number_stack+ecx*4]
+		mov eax,[number_stack+ecx*4] ;Segundo de la pila
+
 		imul ebx
 		mov [number_stack+ecx*4],eax
 		add ecx,1
@@ -168,6 +171,7 @@ PositionCommand:
 		mov ebx,[number_stack+ecx*4]
 		sub ecx,1
 		mov eax,[number_stack+ecx*4]
+
 		add ecx,1
 		mov [number_stack+ecx*4],0
 		add ecx,1
@@ -216,7 +220,6 @@ BackgroundCommand:
 ;BKG
 ; Cambia el color del fondo de la pantalla.
 
-
 		mov ecx,[cnumberstack]
 		cmp ecx,0
 		je PositionCommand.pilaVacia
@@ -257,9 +260,9 @@ DivCommand:
 
 		;Leer los 2 numeros
 		sub ecx,1
-		mov eax,[number_stack+ecx*4]
+		mov ebx,[number_stack+ecx*4] ;Tope de la pila
 		sub ecx,1
-		mov ebx,[number_stack+ecx*4]
+		mov eax,[number_stack+ecx*4] ;Segundo de la pila
 
 		cmp ebx,0
 		je  DivCommand.errorDivision
@@ -562,9 +565,10 @@ SubCommand:
 		jl SubCommand.emptyStack
 
 		sub ecx,1
-		mov eax,[number_stack+ecx*4]
+		mov ebx,[number_stack+ecx*4] ;Tope de la pila
 		sub ecx,1
-		mov ebx,[number_stack+ecx*4]
+		mov eax,[number_stack+ecx*4] ;Segundo de la pila
+
 		sub eax,ebx
 		mov [number_stack+ecx*4],eax
 
