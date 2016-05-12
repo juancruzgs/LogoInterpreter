@@ -21,12 +21,20 @@ K_ENTER equ 28
 K_BACKSPACE equ 14
 K_SPACE equ $39
 K_SUB equ 12
+K_ADD equ 13
+K_MUL equ 26
+K_DIV equ 27
 K_A equ 30
 K_B equ 48
 K_C equ 46
 K_D equ 32
 K_E equ 18
 K_F equ 33
+
+OPERATION_SUB equ 1
+OPERATION_ADD equ 2
+OPERATION_MUL equ 3
+OPERATION_DIV equ 4
 
 ; Commands
 CMDNUMERO  equ $00001631

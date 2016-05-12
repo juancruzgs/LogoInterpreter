@@ -204,6 +204,9 @@ InputHandler.repeat1:
 		  ;Agregar numeros a la pila. Un digito por vez
 		  and eax,$000000FF
 
+		  cmp eax,K_SUB
+		  je  InputHandler.ejecNumDecimal
+
 		  cmp eax,CMDLNUMBER
 		  jl InputHandler.errorComando
 		  cmp eax,CMDHNUMBER
@@ -242,40 +245,33 @@ InputHandler.salir:
 
 		  ret
 
+;*****************************************************************************
 InputHandler.ejecNumDecimal:
+		  mov ebx,0
+		  mov [arithmetic_operation],0
+		  mov [arithmetic_expression],0
 
-		  push edx
-
-		  push eax
-		  call GetNumberFromKeyCode
-		  pop ebx
-
-
-		  ; fixme.........
-		  push ebx
-		  add ebx,48
-		  push ebx
-		  call HistoryBufferCommand
-		  add esp,4
-		  pop ebx
-		  ; ..............
-
-
-		  pop edx
-
-
-
- InputHandler.loop1:
-		  add edx,1
+InputHandler.loop1:
 
 		  cmp edx,[cinput]
-		  jge  InputHandler.edn_FinInputHandler
+		  je  InputHandler.edn_FinLecturaNumero ;Fin lectura expresion completa
 
-		  mov eax,[input_storage+edx]
-		  and eax,$0000ff
+		  mov eax,[input_storage+edx] ;KeyCode
+		  add edx,1
+
+		  and eax,$000000FF
 
 		  cmp eax,K_SUB
-		  je InputHandler.edn_negativizar
+		  je InputHandler.ejecutarResta
+
+		  cmp eax,K_ADD
+		  je InputHandler.ejecutarSuma
+
+		  cmp eax,K_MUL
+		  je InputHandler.ejecutarMul
+
+		  cmp eax,K_DIV
+		  je InputHandler.ejecutarDiv
 
 		  cmp eax,K_SPACE
 		  je InputHandler.edn_FinInputHandler
@@ -286,50 +282,159 @@ InputHandler.ejecNumDecimal:
 		  cmp eax,CMDHNUMBER
 		  jg InputHandler.errorComando
 
-		  ; hago la conversion a numero decimal
-		  push edx
 		  push ebx
+
 		  push eax
 		  call GetNumberFromKeyCode
-		  pop ecx
+		  pop ecx ;Digito
 
+		  pop ebx ;Numero decimal completo hasta el momento
 
-		  ; fixme.........
-		  push ecx
-		  add ecx,48
-		  push ecx
-		  call HistoryBufferCommand
-		  add esp,4
-		  pop ecx
-		  ; ..............
-
-
-		  pop ebx
-		  mov eax,10
-		  mul ebx
-		  mov ebx,eax
+		  imul ebx,10
 		  add ebx,ecx
-		  pop edx
 
 		  jmp InputHandler.loop1
 
+InputHandler.ejecutarResta:
+		  mov eax,[arithmetic_operation] ;Operacion pendiente
+		  mov [arithmetic_operation],OPERATION_SUB ;Operacion actual
 
-InputHandler.edn_negativizar:
-		  ; si se encontro el signo "-" al final, paso el nro a negativo
-		  push edx
-		  mov eax,0
-		  sub eax,ebx
+		  jmp InputHandler.ejecutarOperacion
+
+InputHandler.ejecutarSuma:
+		  mov eax,[arithmetic_operation]
+		  mov [arithmetic_operation],OPERATION_ADD
+
+		  jmp InputHandler.ejecutarOperacion
+
+InputHandler.ejecutarMul:
+		  mov eax,[arithmetic_operation]
+		  mov [arithmetic_operation],OPERATION_MUL
+
+		  jmp InputHandler.ejecutarOperacion
+
+InputHandler.ejecutarDiv:
+		  mov eax,[arithmetic_operation]
+		  mov [arithmetic_operation],OPERATION_DIV
+
+		  jmp InputHandler.ejecutarOperacion
+
+InputHandler.ejecutarOperacion:
+		  ;Se verifica si habia operaciones pendientes
+		  cmp eax,OPERATION_SUB
+		  je InputHandler.restaAnidada
+
+		  cmp eax,OPERATION_ADD
+		  je InputHandler.sumaAnidada
+
+		  cmp eax,OPERATION_MUL
+		  je InputHandler.mulAnidada
+
+		  cmp eax,OPERATION_DIV
+		  je InputHandler.divAnidada
+
+		  ;No habia operaciones pendientes
+		  mov [arithmetic_expression],ebx
+		  mov ebx,0 ;Empezar a leer un nuevo numero
+		  jmp InputHandler.loop1
+
+InputHandler.edn_FinLecturaNumero:
+		  mov eax,[arithmetic_operation]
+		  mov [arithmetic_operation],0
+
+		  cmp eax,OPERATION_SUB
+		  je InputHandler.restaFinal
+
+		  cmp eax,OPERATION_ADD
+		  je InputHandler.sumaFinal
+
+		  cmp eax,OPERATION_MUL
+		  je InputHandler.mulFinal
+
+		  cmp eax,OPERATION_DIV
+		  je InputHandler.divFinal
+
+		  jmp InputHandler.edn_FinInputHandler
+
+;----Resta---------
+InputHandler.restaAnidada:
+		  call InputHandler.resta
+		  mov ebx,0 ;Empezar a leer un nuevo numero
+		  jmp  InputHandler.loop1
+
+InputHandler.restaFinal:
+		  call InputHandler.resta
+		  jmp InputHandler.edn_FinInputHandler
+
+InputHandler.resta:
+		  mov eax,[arithmetic_expression] ;Expresion hasta el momento
+		  sub eax,ebx ;Ultimo numero
 		  mov ebx,eax
 
+		  mov [arithmetic_expression],ebx
 
-		  push dword [msg_neg]
-		  call SaveHistory
-		  add esp,4
+		  ret
 
+;----Suma---------
+InputHandler.sumaAnidada:
+		  call InputHandler.suma
+		  mov ebx,0 ;Empezar a leer un nuevo numero
+		  jmp  InputHandler.loop1
+
+InputHandler.sumaFinal:
+		  call InputHandler.suma
+		  jmp InputHandler.edn_FinInputHandler
+
+InputHandler.suma:
+		  mov eax,[arithmetic_expression] ;Expresion hasta el momento
+		  add ebx,eax ;Ultimo numero
+
+		  mov [arithmetic_expression],ebx
+
+		  ret
+
+;----Multiplicacion---------
+InputHandler.mulAnidada:
+		  call InputHandler.mul
+		  mov ebx,0 ;Empezar a leer un nuevo numero
+		  jmp  InputHandler.loop1
+
+InputHandler.mulFinal:
+		  call InputHandler.mul
+		  jmp InputHandler.edn_FinInputHandler
+
+InputHandler.mul:
+		  mov eax,[arithmetic_expression] ;Expresion hasta el momento
+		  imul ebx,eax ;Ultimo numero
+
+		  mov [arithmetic_expression],ebx
+
+		  ret
+
+;----Division---------
+InputHandler.divAnidada:
+		  call InputHandler.div
+		  mov ebx,0 ;Empezar a leer un nuevo numero
+		  jmp  InputHandler.loop1
+
+InputHandler.divFinal:
+		  call InputHandler.div
+		  jmp InputHandler.edn_FinInputHandler
+
+InputHandler.div:
+		  push edx ;Registro necesario para la division
+
+		  mov eax,[arithmetic_expression] ;Expresion hasta el momento
+		  cdq
+		  idiv ebx ;Ultimo numero
+		  mov ebx,eax
+
+		  mov [arithmetic_expression],ebx
 
 		  pop edx
-		  add edx,1
+		  ret
 
+;***********************************************
 InputHandler.edn_FinInputHandler:
 
 		  ; se apila el nro decimal en la pila de numeros

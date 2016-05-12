@@ -127,6 +127,9 @@ section '.data' data readable writeable
 	cnumberstack   dd 0 ; Cantidad de numero en la pila de dibujo
 	chistorybuffer dd 0
 
+	arithmetic_operation dd 0;
+	arithmetic_expression	     rd 128
+
 	negcolor dd 0
 
 	;mensajes
