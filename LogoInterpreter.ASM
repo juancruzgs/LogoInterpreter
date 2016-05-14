@@ -130,6 +130,8 @@ section '.data' data readable writeable
 	arithmetic_operation dd 0;
 	arithmetic_expression	     rd 128
 
+	repeat_position dd 0;
+
 	negcolor dd 0
 
 	;mensajes
@@ -162,6 +164,8 @@ section '.data' data readable writeable
 	msg_space db		'   ',0
 	msg_neg db		'-  ',0
 	msg_pesos db		'$',0
+	msg_wrong_repeat_sintax db 'wrong repeat sintax',0
+	msg_repeat_needs_parameter db 'repeat count must be inserted in stack',0
 
 	;variables del lapiz
 	pen_x dd CENTER_POSITION_X

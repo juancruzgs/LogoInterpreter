@@ -22,3 +22,13 @@ COL  : Levanta el lapiz y cambia el color de dibujo tomando como valor el tope d
 BKG  : Cambia el color de fondo tomando como valor el tope de la pila
 
 BYE  : Salir del programa
+
+
+
+Estructuras de control:
+
+
+repeat -> <contador_repeat> [ lista de comandos ]
+	  ejemplo dibujar circulo: 36 [ 10 adv 10 righ ]
+
+

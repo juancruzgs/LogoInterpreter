@@ -129,23 +129,11 @@ InputHandler.repeat1:
 
 		  mov eax,[input_storage+edx]
 
-		  cmp eax,CMDBYE
-		  je SYSEND
-
-		  cmp eax,CMDNUMERO
-		  je InputHandler.exec_num
-
-		  cmp eax,CMDDUP
-		  je InputHandler.exec_duplicate
-
-		  cmp eax,CMDDROP
-		  je InputHandler.exec_drop
-
 		  cmp eax,CMDSWAP
 		  je InputHandler.exec_swap
 
-		  cmp eax,CMDADVANCE
-		  je InputHandler.exec_advance
+		  cmp eax,CMDDROP
+		  je InputHandler.exec_drop
 
 		  cmp eax,CMDLEFT
 		  je InputHandler.exec_left
@@ -153,26 +141,11 @@ InputHandler.repeat1:
 		  cmp eax,CMDRIGTH
 		  je InputHandler.exec_right
 
-		  cmp eax,CMDPOSITION
-		  je InputHandler.exec_position
-
-		  cmp eax,CMDUP
-		  je InputHandler.exec_up
-
 		  cmp eax,CMDDOWN
 		  je InputHandler.exec_down
 
-		  cmp eax,CMDCOLOR
-		  je InputHandler.exec_color
-
-		  cmp eax,CMDBACKGROUND
-		  je InputHandler.exec_background
-
 		  cmp eax,CMDHOME
 		  je InputHandler.exec_home
-
-		  cmp eax,CMDCLEAR
-		  je InputHandler.exec_clear
 
 		  cmp eax,CMDLOAD
 		  je InputHandler.exec_load
@@ -180,11 +153,26 @@ InputHandler.repeat1:
 		  cmp eax,CMDSAVE
 		  je InputHandler.exec_save
 
-		  cmp eax,CMDRUN
-		  je InputHandler.exec_run
+		  ;Comandos de 3 letras
+		  and eax,$00FFFFFF
 
-		  cmp eax,CMDRPTI
-		  je InputHandler.exec_bucle
+		  cmp eax,CMDBYE
+		  je SYSEND
+
+		  cmp eax,CMDADVANCE
+		  je InputHandler.exec_advance
+
+		  cmp eax,CMDPOSITION
+		  je InputHandler.exec_position
+
+		  cmp eax,CMDCOLOR
+		  je InputHandler.exec_color
+
+		  cmp eax,CMDBACKGROUND
+		  je InputHandler.exec_background
+
+		  cmp eax,CMDCLEAR
+		  je InputHandler.exec_clear
 
 		  cmp eax,CMDADD
 		  je InputHandler.exec_add
@@ -198,11 +186,29 @@ InputHandler.repeat1:
 		  cmp eax,CMDDIV
 		  je InputHandler.exec_div
 
-		  cmp eax,CMDRPTF
-		  je InputHandler.bcl_closer
+		  cmp eax,CMDDUP
+		  je InputHandler.exec_duplicate
 
+		  ;Comandos de 2 letras
+		  and eax,$0000FFFF
+		  cmp eax,CMDNUMERO
+		  je InputHandler.exec_num
+
+		  cmp eax,CMDUP
+		  je InputHandler.exec_up
+
+		  cmp eax,CMDRUN
+		  je InputHandler.exec_run
+
+		  ;Comandos de 1 letra
 		  ;Agregar numeros a la pila. Un digito por vez
 		  and eax,$000000FF
+
+		  cmp eax,CMDINITREPEAT
+		  je InputHandler.exec_repeat_init
+
+		  cmp eax,CMDENDREPEAT
+		  je InputHandler.exec_repeat_end
 
 		  cmp eax,K_SUB
 		  je  InputHandler.ejecNumDecimal
@@ -221,17 +227,17 @@ InputHandler.errorComando:
 		  add esp,4
 		  jmp InputHandler.salir
 
-
+InputHandler.initSearchNext:
+		  add edx,1
 		  ;busca el proximo comando a reconocer en la linea
 InputHandler.repeat2:
-		  add edx,1
 		  cmp edx,[cinput]
 		  jg InputHandler.salir
 
 		  mov eax,[input_storage+edx]
 		  and eax,$0000ff
 		  cmp eax,K_SPACE
-		  jne InputHandler.repeat2
+		  jne InputHandler.initSearchNext
 
 		  add edx,1
 		  jmp InputHandler.repeat1
@@ -274,7 +280,7 @@ InputHandler.loop1:
 		  je InputHandler.ejecutarDiv
 
 		  cmp eax,K_SPACE
-		  je InputHandler.edn_FinInputHandler
+		  je InputHandler.edn_FinLecturaNumero
 
 		  cmp eax,CMDLNUMBER
 		  jl InputHandler.errorComando
@@ -456,11 +462,9 @@ InputHandler.edn_FinInputHandler:
 		  add esp,4
 		  pop edx
 
-		  cmp edx,[cinput]
-		  je InputHandler.salir
-
-		  add edx,1
-		  jmp InputHandler.repeat1
+		  ;Posicionarse en el espacio (si lo hay)
+		  dec edx
+		  jmp InputHandler.repeat2
 
 ; .....................................................
 InputHandler.ejec_NumHexadecimal:
@@ -670,47 +674,49 @@ InputHandler.exec_div:
 
 ;______________________________________________________
 
-
- ; analisis del "[]" CMD REPEAT
-InputHandler.exec_bucle:
-
-		  push edx
-		  ; tengo el [ voy a buscar el prox ]
+InputHandler.exec_repeat_init:
+		  mov [repeat_position],edx
 
 InputHandler.bcl_loop1:
+		  ;Busca "]" para asegurar que la sintaxis esta bien
 		  add edx,1
 
 		  cmp edx,[cinput]
-		  jge InputHandler.bcl_noclosed
+		  jge InputHandler.wrong_repeat_sintax
 
 		  mov eax,[input_storage+edx]
-		  and eax,$0000ff
+		  and eax,$0000FF
 
-		  cmp eax,CMDRPTF
+		  cmp eax,CMDENDREPEAT ;"]"
 		  jne InputHandler.bcl_loop1
 
-		  ;si llego ac�, el bucle esta cerrado correctamente
-		  ; me fijo en la pila el tope y en base a eso
-		  ; ejecuto
-InputHandler.bcl_closer:
+InputHandler.exec_repeat_end:
+		  ;Ver si esta insertado el numero de ciclos en la pila
 		  mov eax,[cnumberstack]
 		  cmp eax,0
-		  je InputHandler.bcl_finbucle
+		  je InputHandler.repeat_needs_paramter
 
+		  ;Tope de la pila
 		  sub eax,1
+
+		  ;EBX = numero de ciclos
 		  mov ebx,[number_stack+eax*4]
 		  cmp ebx,0
 		  jle InputHandler.bcl_finbucle
 
+		  ;Decrementar el tope de la pila
 		  sub ebx,1
 		  mov [number_stack+eax*4],ebx
-		  mov edx,[esp]
+
+		  ;Posicion de "["
+		  mov edx,[repeat_position]
+
+		  ;Saltear el "["
 		  add edx,2
+
 		  jmp InputHandler.repeat1
 
  InputHandler.bcl_finbucle:
-
-		  add esp,4
 		  push edx
 
 		  Call	GraphicDrawStack
@@ -721,12 +727,19 @@ InputHandler.bcl_closer:
 		  pop edx
 		  jmp InputHandler.repeat2
 
+InputHandler.wrong_repeat_sintax:
 
- InputHandler.bcl_noclosed:
-
+		  push msg_wrong_repeat_sintax
+		  call	GraphicPrintMessage
 		  add esp,4
-		  jmp InputHandler.errorComando
+		  jmp InputHandler.salir
 
+InputHandler.repeat_needs_paramter:
+
+		  push msg_repeat_needs_parameter
+		  call	GraphicPrintMessage
+		  add esp,4
+		  jmp InputHandler.salir
 
 ;______________________________________________________
 
